@@ -601,9 +601,9 @@ export class Player extends BaseGameObject {
 
             if (def.defaultItems.chest) {
                 if (this.chest) {
-                    this.dropArmor(this.chest, GameObjectDefs[this.chest] as LootDef);
+                this.dropArmor(this.chest, GameObjectDefs[this.chest] as LootDef);
                 }
-                this.chest = def.defaultItems.chest;
+            this.chest = def.defaultItems.chest;
             }
             this.backpack = def.defaultItems.backpack;
 
@@ -1640,10 +1640,10 @@ export class Player extends BaseGameObject {
             case spectateMsg.specNext:
             case spectateMsg.specPrev:
                 const nextOrPrev = +spectateMsg.specNext - +spectateMsg.specPrev;
-                playerToSpec = util.wrappedArrayIndex(
-                    spectatablePlayers,
-                    spectatablePlayers.indexOf(this.spectating!) + nextOrPrev,
-                );
+                    playerToSpec = util.wrappedArrayIndex(
+                        spectatablePlayers,
+                        spectatablePlayers.indexOf(this.spectating!) + nextOrPrev,
+                    );
                 break;
         }
         this.spectating = playerToSpec;
@@ -1655,8 +1655,8 @@ export class Player extends BaseGameObject {
 
         const sourceIsPlayer = params.source?.__type === ObjectType.Player;
 
-        // teammates can't deal damage to each other
-        if (sourceIsPlayer && params.source !== this) {
+        // teammates can't deal damage to each other unless disconnected
+        if (sourceIsPlayer && params.source !== this && !this.disconnected) {
             if ((params.source as Player).groupId === this.groupId) {
                 return;
             }
@@ -1896,21 +1896,25 @@ export class Player extends BaseGameObject {
             const source = params.source;
             this.killedBy = source;
             if (source !== this) {
-                source.kills++;
+                if (this.groupId !== source.groupId) {
+                    source.kills++;
 
-                if (this.game.map.mapDef.gameMode.killLeaderEnabled) {
-                    const killLeader = this.game.playerBarn.killLeader;
-                    if (
-                        source.kills >= GameConfig.player.killLeaderMinKills &&
-                        source.kills > (killLeader?.kills ?? 0)
-                    ) {
-                        if (killLeader) {
-                            killLeader.role = "";
+                    if (this.game.map.mapDef.gameMode.killLeaderEnabled) {
+                        const killLeader = this.game.playerBarn.killLeader;
+                        if (
+                            source.kills >= GameConfig.player.killLeaderMinKills &&
+                            source.kills > (killLeader?.kills ?? 0)
+                        ) {
+                            if (killLeader) {
+                                killLeader.role = "";
+                            }
+                            source.promoteToRole("kill_leader");
                         }
-                        source.promoteToRole("kill_leader");
-                    }
-                    if (source.isKillLeader) {
-                        this.game.playerBarn.killLeaderDirty = true;
+                        if (source.isKillLeader) {
+                            this.game.playerBarn.killLeaderDirty = true;
+                        }
+                    } else {
+                        killMsg.killed = false;
                     }
                 }
 
@@ -2156,12 +2160,12 @@ export class Player extends BaseGameObject {
 
         this.playerBeingRevived = playerToRevive;
         if (this.downed && this.hasPerk("self_revive")) {
-            this.doAction(
-                "",
-                GameConfig.Action.Revive,
+        this.doAction(
+            "",
+            GameConfig.Action.Revive,
                 GameConfig.player.reviveDuration,
-                this.__id,
-            );
+            this.__id,
+        );
         } else {
             playerToRevive.doAction(
                 "",
@@ -2211,7 +2215,9 @@ export class Player extends BaseGameObject {
 
     useHealingItem(item: string): void {
         const itemDef = GameObjectDefs[item];
-        assert(itemDef.type === "heal", `Invalid heal item ${item}`);
+        if (itemDef.type !== "heal") {
+            throw new TypeError(`Invalid heal item ${item}`);
+        }
 
         if (
             (!this.hasPerk("aoe_heal") && this.health == itemDef.maxHeal) ||
