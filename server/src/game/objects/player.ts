@@ -1922,6 +1922,9 @@ export class Player extends BaseGameObject {
                     source.health += 25;
                     source.boost += 25;
                     source.giveHaste(GameConfig.HasteType.Takedown, 20);
+                } else {
+                    source.health += 20;
+                    source.boost += 12.5;
                 }
             }
 
