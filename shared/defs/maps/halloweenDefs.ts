@@ -187,9 +187,6 @@ const mapDef = {
                 ],
             },
         },
-        customSpawnRules: {
-            locationSpawns: [],
-        },
         densitySpawns: [
             {
                 stone_01: 125,

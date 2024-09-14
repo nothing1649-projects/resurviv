@@ -3,20 +3,19 @@ import { EmotesDefs } from "../../shared/defs/gameObjects/emoteDefs";
 import { MeleeDefs } from "../../shared/defs/gameObjects/meleeDefs";
 import { OutfitDefs } from "../../shared/defs/gameObjects/outfitDefs";
 import { UnlockDefs } from "../../shared/defs/gameObjects/unlockDefs";
-import { GameConfig, type Input } from "../../shared/gameConfig";
+import { GameConfig } from "../../shared/gameConfig";
 import * as net from "../../shared/net/net";
 import {
     type ObjectData,
     ObjectType,
     type ObjectsPartialData,
 } from "../../shared/net/objectSerializeFns";
-import type { LocalData } from "../../shared/net/updateMsg";
 import { util } from "../../shared/utils/util";
 import { v2 } from "../../shared/utils/v2";
 import type { FindGameResponse } from "./gameServer";
 
 const config = {
-    address: "http://127.0.0.1:8001",
+    address: "http://127.0.0.1:8000",
     region: "local",
     gameModeIdx: 0,
     botCount: 79,
@@ -145,12 +144,6 @@ class Bot {
 
     objectCreator = new ObjectCreator();
 
-    data: string;
-
-    inputs: Input[] = [];
-
-    weapons: LocalData["weapons"] = [];
-
     constructor(id: number, res: FindGameResponse["res"][0]) {
         this.id = id;
 
@@ -158,8 +151,6 @@ class Bot {
         this.ws = new WebSocket(
             `${res.useHttps ? "wss" : "ws"}://${res.addrs[0]}/play?gameId=${res.gameId}`,
         );
-
-        this.data = res.data;
 
         this.ws.addEventListener("error", console.error);
 
@@ -204,10 +195,6 @@ class Bot {
             case net.MsgType.Update: {
                 const msg = new net.UpdateMsg();
                 msg.deserialize(stream, this.objectCreator);
-
-                if (msg.activePlayerData.weapsDirty) {
-                    this.weapons = msg.activePlayerData.weapons;
-                }
 
                 // Delete objects
                 for (let i = 0; i < msg.delObjIds.length; i++) {
@@ -293,9 +280,6 @@ class Bot {
             boost: "boost_basic",
             emotes: this.emotes,
         };
-
-        joinMsg.matchPriv = this.data;
-
         this.sendMsg(net.MsgType.Join, joinMsg);
     }
 
@@ -327,11 +311,6 @@ class Bot {
         if (this.interact) {
             inputPacket.addInput(GameConfig.Input.Interact);
         }
-
-        for (const input of this.inputs) {
-            inputPacket.addInput(input);
-        }
-        this.inputs.length = 0;
 
         this.sendMsg(net.MsgType.Input, inputPacket);
 
@@ -383,46 +362,21 @@ class Bot {
                 this.moving.right = true;
                 break;
         }
-
-        if (Math.random() < 0.1) {
-            const weaps = this.weapons.filter((weap) => weap.type !== "");
-            const slot = this.weapons.indexOf(weaps[util.randomInt(0, weaps.length - 1)]);
-
-            let input = null;
-            switch (slot) {
-                case 0:
-                    input = GameConfig.Input.EquipPrimary;
-                    break;
-                case 1:
-                    input = GameConfig.Input.EquipSecondary;
-                    break;
-                case 2:
-                    input = GameConfig.Input.EquipMelee;
-                    break;
-                case 3:
-                    input = GameConfig.Input.EquipThrowable;
-                    break;
-            }
-            if (input) {
-                this.inputs.push(input);
-            }
-        }
     }
 }
 
 void (async () => {
     for (let i = 1; i <= config.botCount; i++) {
         setTimeout(async () => {
-            const response = (await (
+            const response = await (
                 await fetch(`${config.address}/api/find_game`, {
                     method: "POST",
                     body: JSON.stringify({
                         region: config.region,
-                        autoFill: true,
                         gameModeIdx: config.gameModeIdx,
                     }),
                 })
-            ).json()) as FindGameResponse;
+            ).json();
 
             bots.add(new Bot(i, response.res[0]));
             if (i === config.botCount) allBotsJoined = true;

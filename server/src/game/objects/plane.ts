@@ -50,7 +50,6 @@ export class PlaneBarn {
                 plane.actionComplete
             ) {
                 this.planes.splice(i, 1);
-                i--;
                 this.freeIds.push(plane.id);
             }
         }
@@ -60,7 +59,6 @@ export class PlaneBarn {
             scheduledPlane.time -= dt;
             if (scheduledPlane.time <= 0) {
                 this.scheduledPlanes.splice(i, 1);
-                i--;
 
                 switch (scheduledPlane.options.type) {
                     case GameConfig.Plane.Airdrop: {

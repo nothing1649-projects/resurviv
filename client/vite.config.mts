@@ -1,13 +1,11 @@
 import { defineConfig } from "vite";
 import stripBlockPlugin from "vite-plugin-strip-block";
 import { Config } from "../server/src/config";
-import { GIT_VERSION } from "../server/src/utils/gitRevision";
 
 export default defineConfig(({ mode }) => {
     return {
         base: "",
         build: {
-            sourcemap: true,
             chunkSizeWarningLimit: 2000,
             rollupOptions: {
                 output: {
@@ -46,7 +44,6 @@ export default defineConfig(({ mode }) => {
                       }
                     : {}),
             },
-            GIT_VERSION: JSON.stringify(GIT_VERSION),
         },
         plugins: [
             mode !== "development"

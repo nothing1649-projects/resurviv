@@ -21,7 +21,6 @@ export class ProjectileBarn {
             const proj = this.projectiles[i];
             if (proj.destroyed) {
                 this.projectiles.splice(i, 0);
-                i--;
                 continue;
             }
             proj.update(dt);

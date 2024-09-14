@@ -65,7 +65,6 @@ export class SmokeBarn {
 
             if (smoke.destroyed) {
                 this.smokes.splice(i, 1);
-                i--;
             }
         }
 
@@ -74,7 +73,6 @@ export class SmokeBarn {
             emitter.update(dt);
             if (!emitter.active) {
                 this.emitters.splice(i, 1);
-                i--;
             }
         }
     }

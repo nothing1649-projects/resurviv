@@ -8,7 +8,6 @@ import { Config } from "./config";
 import { Game, type ServerGameConfig } from "./game/game";
 import type { Group } from "./game/group";
 import type { Player } from "./game/objects/player";
-import { GIT_VERSION } from "./utils/gitRevision";
 import { Logger } from "./utils/logger";
 import { cors, forbidden, readPostedJSON, returnJson } from "./utils/serverHelpers";
 
@@ -154,7 +153,6 @@ export class GameServer {
             const game = this.games[i];
             if (game.stopped) {
                 this.games.splice(i, 1);
-                i--;
                 this.gamesById.delete(game.id);
                 continue;
             }
@@ -406,7 +404,7 @@ if (process.argv.includes("--game-server")) {
     });
 
     app.listen(Config.gameServer.host, Config.gameServer.port, () => {
-        server.logger.log(`Survev Game Server v${version} - GIT ${GIT_VERSION}`);
+        server.logger.log(`Resurviv Game Server v${version}`);
         server.logger.log(
             `Listening on ${Config.gameServer.host}:${Config.gameServer.port}`,
         );

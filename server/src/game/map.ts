@@ -334,7 +334,6 @@ export class GameMap {
             for (let i = 0; i < objs.length; i++) {
                 const player = objs[i];
                 if (player.__type !== ObjectType.Player) continue;
-                if (player.dead) continue;
                 if (!util.sameLayer(player.layer, building.layer)) continue;
                 for (let j = 0; j < building.zoomRegions.length; j++) {
                     const region = building.zoomRegions[j];
@@ -1284,26 +1283,6 @@ export class GameMap {
         if (def.map?.display && layer === 0) this.msg.objects.push(obstacle);
         this.incrementCount(type);
 
-        return obstacle;
-    }
-
-    genOutfitObstacle(type: string, player: Player) {
-        const def = MapObjectDefs[type] as ObstacleDef;
-
-        const obstacle = new Obstacle(
-            this.game,
-            player.pos,
-            type,
-            player.layer,
-            0,
-            def.scale.createMax,
-            undefined,
-            undefined,
-            true,
-        );
-        obstacle.skinPlayerId = player.__id;
-        this.game.objectRegister.register(obstacle);
-        this.obstacles.push(obstacle);
         return obstacle;
     }
 

@@ -126,18 +126,9 @@ export class TeamMenu {
                     },
                 },
             );
-            let codeToCopy = $("#team-url").html();
-            // if running on an iframe
-            if (window !== window.top) {
-                codeToCopy = this.roomData.roomUrl.substring(1);
-            }
-            helpers.copyTextToClipboard(codeToCopy);
+            const r = $("#team-url").html();
+            helpers.copyTextToClipboard(r);
         });
-
-        if (window !== window.top) {
-            $("#team-desc-text").hide();
-        }
-
         if (!device.mobile) {
             // Hide invite link
             this.hideUrl = false;
@@ -447,7 +438,7 @@ export class TeamMenu {
 
             // Invite link
             if (this.roomData.roomUrl) {
-                const roomUrl = `${window.location.href.replace(this.roomData.roomUrl, "")}${this.roomData.roomUrl}`;
+                const roomUrl = `${window.location.origin}/${this.roomData.roomUrl}`;
                 const roomCode = this.roomData.roomUrl.substring(1);
 
                 $("#team-url").html(roomUrl);
