@@ -16,6 +16,7 @@ import type { Game } from "../game";
 import type { DamageParams, GameObject } from "./gameObject";
 import type { Obstacle } from "./obstacle";
 import { Player } from "./player";
+import { Projectile } from "./projectile";
 
 // NOTE: most of this code was copied from surviv client and bit heroes arena client
 // to get bullet collision the most accurate possible
@@ -29,8 +30,8 @@ function transformSegment(p0: Vec2, p1: Vec2, pos: Vec2, dir: Vec2) {
 }
 
 interface BulletCollision {
-    type: "obstacle" | "player" | "pan";
-    obj?: Player | Obstacle;
+    type: "obstacle" | "player" | "pan" | "projectile";
+    obj?: Player | Obstacle | Projectile;
     obstacleType?: string;
     collidable: boolean;
     point: Vec2;
@@ -473,6 +474,25 @@ export class Bullet {
                 if (collision || panCollision) {
                     break;
                 }
+            } else if (!this.isShrapnel && obj.__type === ObjectType.Projectile) {
+                if (!obj.dead) {
+                    const collision = coldet.intersectSegmentCircle(
+                        posOld,
+                        this.pos,
+                        obj.pos,
+                        obj.rad
+                    );
+                    if (collision) {
+                        collisions.push({
+                            type: "projectile",
+                            point: v2.add(collision.point, v2.mul(collision.normal, 0.1)),
+                            normal: collision.normal,
+                            layer: obj.layer,
+                            collidable: false,
+                            obj: obj
+                        });
+                    }
+                }
             }
         }
 
@@ -553,6 +573,12 @@ export class Bullet {
             } else if (col.type == "pan") {
                 hit = col.collidable;
                 this.reflect(col.point, col.normal, col.obj!.__id);
+            } else if (col.type == "projectile") {
+                hit = false;
+                if (col.obj && col.obj instanceof Projectile) {
+                    col.obj.vel = v2.mul(this.dir, this.speed * 0.5);
+                    col.obj.fuseTime -= this.damage * 0.01;
+                }
             }
             if (hit) {
                 this.pos = col.point;
